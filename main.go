@@ -6,6 +6,7 @@ import (
 	"nutech/database"
 	"nutech/pkg/mysql"
 	"nutech/routes"
+	"os"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -15,8 +16,7 @@ import (
 func main() {
 	errEnv := godotenv.Load()
 	if errEnv != nil {
-		fmt.Println(errEnv)
-		panic("failed to load env file")
+		panic("Failed to load env file")
 	}
 
 	mysql.DatabaseInit()
@@ -27,17 +27,14 @@ func main() {
 
 	routes.RouteInit(r.PathPrefix("/api/v1").Subrouter())
 
-	var AllowedHeaders = handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
-	var AllowedMethods = handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS", "PATCH", "DELETE"})
-	var AllowedOrigins = handlers.AllowedOrigins([]string{"*"})
-
 	r.PathPrefix("/uploads").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
+	var allowedHeaders = handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
+	var allowedMethods = handlers.AllowedMethods([]string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})
+	var allowedOrigins = handlers.AllowedOrigins([]string{"*"})
 
-	// var port = os.Gatenv("PORT")
+	var port = os.Getenv("PORT")
 
-	// http.ListenAndServe("localhost:5000", r)
-	var port = "5000"
-	fmt.Println("server running localhost:" + port)
-	http.ListenAndServe("localhost:"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
+	fmt.Println("server running on port " + port)
+	http.ListenAndServe(":"+port, handlers.CORS(allowedHeaders, allowedMethods, allowedOrigins)(r))
 
 }
